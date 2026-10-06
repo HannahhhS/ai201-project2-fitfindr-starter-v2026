@@ -59,24 +59,24 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Searches the clothing listings for items matching the user's description, requested size, and maximum price.
+- **Inputs:** `description` (str), `size` (str), `max_price` (float)
+- **Returns:** A list of matching clothing listings, including each listing's title, description, category, style tags, size, price, colors, brand, and platform.
+- **When it has nothing:** Returns an empty list when no listings match the description, size, and maximum price.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Uses the selected new clothing item and the user's wardrobe to generate outfit ideas that combine the new item with pieces from the wardrobe
+- **Inputs:** `new_item` (dict), `wardrobe` (list)
+- **Returns:** Outfit suggestions describing how to style the new item with pieces from the wardrobe.
+- **When it has nothing:** If the wardrobe is empty, returns general outfit advice for the new item instead of failing.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Creates a short fit-card caption based on the selected outfit and new clothing item.
+- **Inputs:** `outfit` (str), `new_item` (dict)
+- **Returns:** A short text caption describing the completed outfit and new item.
+- **When it has nothing:** Returns a fallback message if the outfit or new item is missing instead of creating a fit card from incomplete information.
 
 ---
 
@@ -94,6 +94,7 @@
      function have to be real. -->
 
 **Branch rule:**
+The agent first searches for listings. If `search_listings` returns an empty list, the agent stops and tells the user what they can change, such as the description, size, or maximum price. It does not call `suggest_outfit` or `create_fit_card` when there are no matching listings. Otherwise, if matching listings are found, the agent selects a listing and continues to `suggest_outfit`, then uses the outfit and selected item to call `create_fit_card`.
 
 **Where it lives:** `agent.py::run_agent`
 
