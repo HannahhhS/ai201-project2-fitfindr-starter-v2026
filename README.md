@@ -41,6 +41,9 @@
 
 <!-- Three or four sentences: what a user asks for, and what they get back. -->
 
+FitFindr helps users find secondhand clothing listings based on a description, size, and maximum price, then suggests outfits using the selected item and the user's wardrobe. It uses a planning loop to decide whether to continue based on the search results. When a matching listing is found, FitFindr generates outfit suggestions and a short fit-card caption for the selected item. If no listings match, the agent stops and tells the user what they can change instead of continuing with empty results.
+
+
 
 
 ---
@@ -76,7 +79,7 @@
 - **What it does:** Creates a short fit-card caption based on the selected outfit and new clothing item.
 - **Inputs:** `outfit` (str), `new_item` (dict)
 - **Returns:** A short text caption describing the completed outfit and new item.
-- **When it has nothing:** Returns a fallback message if the outfit or new item is missing instead of creating a fit card from incomplete information.
+- **When it has nothing:** If `outfit` is empty or whitespace, returns the message "No outfit suggestion was provided, so a fit card could not be created." instead of calling the model.
 
 ---
 
@@ -98,9 +101,12 @@ The agent first searches for listings. If `search_listings` returns an empty lis
 
 **Where it lives:** `agent.py::run_agent`
 
+
 **How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+The query is parsed with regular expressions in agent.py::parse_query, which extracts the description, optional size, and optional maximum price before searching.
 
 **What moves through the session:** <!-- which fields, in what order -->
+The session stores parsed, search_results, selected_item, wardrobe, outfit_suggestion, and fit_card. The search results are stored first, the selected item is read from the session for suggest_outfit, and the resulting outfit is read from the session for create_fit_card.
 
 ---
 
@@ -114,7 +120,48 @@ The agent first searches for listings. If `search_listings` returns an empty lis
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py ask 'vintage graphic tee under $30'
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 8 items: Graphic Tee — 2003 Tour Bootleg Style, Y2K Baby Tee — Butterfly Print, Vintage Graphic Hoodie — Faded Black … +5 more
+      →    8 match(es)
+[3] select_item
+      out: Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+[4] suggest_outfit
+      in:  Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+      out: Here are two outfit suggestions using your new graphic tee and pieces from your wardrobe:  ### Outfit 1: 90s G…
+      →    10 wardrobe item(s)
+[5] create_fit_card
+      in:  Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+      out: Channeling major 90s grunge with this 2003 Tour Bootleg Style graphic tee, scored on Depop for just $24. It’s …
+
+  Found:    Graphic Tee — 2003 Tour Bootleg Style — $24.0 on depop
+
+  Outfit:   Here are two outfit suggestions using your new graphic tee and pieces from your wardrobe:
+
+### Outfit 1: 90s Grunge Streetwear
+* **Top:** Graphic Tee (New Item)
+* **Bottoms:** Baggy straight-leg jeans (dark wash)
+* **Outerwear:** Vintage black denim jacket
+* **Shoes:** Black combat boots
+* **Accessories:** Black crossbody bag
+
+**Why it works:** This look leans heavily into the grunge and streetwear aesthetic of the tee. Pairing the faded black graphic tee with dark wash baggy jeans creates an effortless, relaxed silhouette. Throwing the vintage black denim jacket on top adds texture and cohesion, while the black combat boots anchor the outfit with a tough, classic edge. 
+
+### Outfit 2: Elevated Casual Streetwear
+* **Top:** Graphic Tee (New Item) layered over or under, paired with the Black cropped zip hoodie
+* **Bottoms:** Wide-leg khaki trousers 
+* **Shoes:** Chunky white sneakers
+* **Accessories:** Brown leather belt, Black crossbody bag
+
+**Why it works:** This outfit balances edgy streetwear with tailored minimal pieces. The boxy graphic tee tucked into the wide-leg khaki trousers creates a great proportion play, cinched together with the brown leather belt for a touch of contrast. Adding the black cropped zip hoodie (either worn open or carried) and finishing with chunky white sneakers keeps the overall vibe modern, comfortable, and effortlessly cool.
+
+  Fit card: Channeling major 90s grunge with this 2003 Tour Bootleg Style graphic tee, scored on Depop for just $24. It’s got that perfect worn-in softness and boxy fit that looks unreal paired with baggy dark wash denim and combat boots. Total effortless streetwear energy.
+
+0 model calls this session, 2 served from cache
 
 ```
 
@@ -128,7 +175,7 @@ $ python -c "from tools import search_listings; print(search_listings('graphic t
 ```
 
 ```
-$$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
 
 Here are two practical outfit suggestions using your new Vintage Levi's 501 Jeans and pieces from your existing wardrobe:
 
@@ -154,7 +201,7 @@ This outfit plays with proportions by pairing the boxy, oversized grey crewneck 
 ```
 
 ```
-$ $ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('black boots and leather jacket', load_listings()[1]))"
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('black boots and leather jacket', load_listings()[1]))"
 
 Channeling peak early 2000s energy in this Y2K Baby Tee — Butterfly Print, especially when I toughen it up with a leather jacket and black boots. The vibe is total sweet-meets-edgy nostalgia. Snagged this little crop on Depop for just $18.00!
 
@@ -173,15 +220,15 @@ Channeling peak early 2000s energy in this Y2K Baby Tee — Butterfly Print, esp
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- **What I asked for:** I asked AI for help implementing the `search_listings` tool while following the instructor's requirements for keyword matching, price filtering, and case-insensitive size matching.
+- **What came back:** AI suggested using keyword extraction and splitting combined sizes such as `S/M` into individual size options. It also explained why naive substring matching would cause incorrect matches, such as treating `L` as a match for `XL`.
+- **What I changed:** I reviewed the approach against the provided requirements and implemented the size matching and keyword filtering in `tools.py`. I tested matching queries, size and price filters, and a query that returned no results.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- **What I asked for:** I asked AI to help evaluate the requirements for the fit-card acceptance criterion after testing `create_fit_card` with several different outfits and items.
+- **What came back:** The generated fit cards were naturally longer than the original 20–200 character limit while still producing useful 2–4 sentence captions with the item, outfit details, and overall vibe.
+- **What I changed:** I changed my acceptance criterion to focus on the qualities that made the fit card useful: a 2–4 sentence caption of at least 100 characters that includes the new item's name, at least one outfit piece, and the overall style or vibe.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 

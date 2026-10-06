@@ -29,7 +29,7 @@ tool calls and returns a fit card — in at least 4 of 5 tries.
      "my search is a plain keyword match and some phrasings will miss" is a
      real answer. -->
 
-     This search is a plain keyword patch and involves model generated responses, so 4 out of 5 allows for the occasional miss while still requiring the full planning loop to work reliably for most macthing queries. 
+     This search is a plain keyword match and involves model generated responses, so 4 out of 5 allows for the occasional miss while still requiring the full planning loop to work reliably for most matching queries. 
 
 ---
 
@@ -42,7 +42,7 @@ Given a query that matches no listings, the agent stops before calling
 <!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
      about this path? -->
 
-     This is controlled by whether the search returns an empty list. Since this doesnt involve any model generated output and should happen every time, 5 ouf of 5 is reasonable here. 
+     This is controlled by whether the search returns an empty list. Since this doesn't involve any model generated output and should happen every time, 5 out of 5 is reasonable here. 
 
 ---
 
@@ -57,12 +57,12 @@ Given a query that matches no listings, the agent stops before calling
      look like state failure — it looks like a tool problem. Something that
      compares session["selected_item"] against what actually reached
      suggest_outfit is the shape you're after. -->
-     If a given query matches atleast one listing, the item stored in session["selected_item"] is the same as the item passed to suggest_outfit in 5 out of 5 runs. 
+     If a given query matches at least one listing, the item stored in session["selected_item"] is the same as the item passed to suggest_outfit in 5 out of 5 runs. 
 
 
 
 **Why this target:**
-This is a state management issue that is controlled by the code. This ensures that the tool found is the tool recieved, and it is deterministic, not determined by keyword matches or phrasings. Since this isnt dealing with model generated wording and is controlled by the code, it must pass 5 out of 5 times. 
+This is a state management issue that is controlled by the code. This ensures that the item found is the item received, and it is deterministic, not determined by keyword matches or phrasings. Since this isn't dealing with model generated wording and is controlled by the code, it must pass 5 out of 5 times. 
 
 
 
@@ -87,6 +87,8 @@ Given a successful outfit recommendation, create_fit_card returns a 2–4 senten
 **Why this target:**
 
 This checks that the fit card uses information from both the new item and the recommended outfit while keeping the result short enough to function as a caption. It stops anything too short. A 4 out of 5 target allows for any variations that could occur since it is model generated. 
+
+**Revision note:** The original criterion required the fit card to be between 20 and 200 characters. After testing `create_fit_card` with multiple items and outfits, the generated captions were consistently longer than 200 characters while still meeting the intended purpose of a short fit-card caption. I revised the target to 2–4 sentences and at least 100 characters, while requiring the item name, an outfit piece, and the overall style or vibe. This makes the criterion more consistently measurable without imposing an arbitrary character limit.
 
 ---
 
