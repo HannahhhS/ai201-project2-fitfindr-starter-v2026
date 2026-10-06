@@ -82,12 +82,11 @@ This is a state management issue that is controlled by the code. This ensures th
      be turned into a number. -->
 
 
-Given a successful outfit recommendation, the fit card tool returns a caption that includes the new item's name, mentions at least one outfit piece, and is between 20 and 200 characters in at least 4 of 5 tries.
-
+Given a successful outfit recommendation, create_fit_card returns a 2–4 sentence caption that is at least 100 characters long, includes the new item's name, mentions at least one outfit piece, and describes the overall style or vibe in at least 4 of 5 tries.
 
 **Why this target:**
 
-This checks that the fit card uses information from both the new item and the recommended outfit while keeping the result short enough to function as a caption. A 4 out of 5 target allows for any variations that could occur since it is model generated. 
+This checks that the fit card uses information from both the new item and the recommended outfit while keeping the result short enough to function as a caption. It stops anything too short. A 4 out of 5 target allows for any variations that could occur since it is model generated. 
 
 ---
 
