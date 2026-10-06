@@ -29,6 +29,8 @@ tool calls and returns a fit card — in at least 4 of 5 tries.
      "my search is a plain keyword match and some phrasings will miss" is a
      real answer. -->
 
+     This search is a plain keyword patch and involves model generated responses, so 4 out of 5 allows for the occasional miss while still requiring the full planning loop to work reliably for most macthing queries. 
+
 ---
 
 ## 2. An impossible query stops before the second tool
@@ -39,6 +41,8 @@ Given a query that matches no listings, the agent stops before calling
 **Why this target:**
 <!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
      about this path? -->
+
+     This is controlled by whether the search returns an empty list. Since this doesnt involve any model generated output and should happen every time, 5 ouf of 5 is reasonable here. 
 
 ---
 
@@ -53,10 +57,12 @@ Given a query that matches no listings, the agent stops before calling
      look like state failure — it looks like a tool problem. Something that
      compares session["selected_item"] against what actually reached
      suggest_outfit is the shape you're after. -->
+     If a given query matches atleast one listing, the item stored in session["selected_item"] is the same as the item passed to suggest_outfit in 5 out of 5 runs. 
 
 
 
 **Why this target:**
+This is a state management issue that is controlled by the code. This ensures that the tool found is the tool recieved, and it is deterministic, not determined by keyword matches or phrasings. Since this isnt dealing with model generated wording and is controlled by the code, it must pass 5 out of 5 times. 
 
 
 
@@ -76,10 +82,12 @@ Given a query that matches no listings, the agent stops before calling
      be turned into a number. -->
 
 
+Given a successful outfit recommendation, the fit card tool returns a caption that includes the new item's name, mentions at least one outfit piece, and is between 20 and 200 characters in at least 4 of 5 tries.
+
 
 **Why this target:**
 
-
+This checks that the fit card uses information from both the new item and the recommended outfit while keeping the result short enough to function as a caption. A 4 out of 5 target allows for any variations that could occur since it is model generated. 
 
 ---
 
@@ -91,10 +99,12 @@ Given a query that matches no listings, the agent stops before calling
      wardrobe path, what happens when the model can't be reached, whether the
      search respects a price ceiling — anything, as long as it names a number
      or an observable outcome. -->
+Given a matching listing and an empty wardrobe, suggest_outfit still returns outfit advice rather than failing in 5 of 5 tries.
 
 
 
 **Why this target:**
+The wardrobe is an input to suggest_outfit, but the agent should still be able to provide general styling advice when there are no wardrobe items to combine with the new item. This is a defined fallback behavior rather than model-generated success criteria, so it should work consistently in 5 of 5 tries.
 
 
 
