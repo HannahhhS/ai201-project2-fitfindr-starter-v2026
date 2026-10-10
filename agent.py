@@ -79,9 +79,12 @@ def parse_query(query: str) -> dict:
 
 # ── planning loop ─────────────────────────────────────────────────────────────
 
-def _search(parsed: dict) -> list[dict]:
+def _search(parsed: dict) -> tuple[list[dict], str]:
     """
     Call search_listings — over MCP when the server has it registered.
+
+    Returns (results, route), where route is "via MCP" or a note saying the
+    direct fallback ran, so the trace never claims MCP when it wasn't used.
 
     ⚠️ UNIT 4, MILESTONE 1. In unit 3 this function does not exist and
     `run_agent` calls `search_listings(...)` directly. The fallback is not
@@ -100,11 +103,12 @@ def _search(parsed: dict) -> list[dict]:
                 "max_price": parsed["max_price"],
             },
         )
-        return results or []
-    except Exception:  # noqa: BLE001 — MCP unavailable is not a user-facing error
-        return search_listings(
+        return results or [], "via MCP"
+    except Exception as exc:  # noqa: BLE001 — MCP unavailable is not a user-facing error
+        results = search_listings(
             parsed["description"], parsed["size"], parsed["max_price"]
         )
+        return results, f"direct call, MCP failed: {type(exc).__name__}"
 
 
 def run_agent(query: str, wardrobe: dict) -> dict:
@@ -143,10 +147,10 @@ def run_agent(query: str, wardrobe: dict) -> dict:
 
         steps += 1
         trace.check_iterations(steps)
-        results = _search(parsed)
+        results, route = _search(parsed)
         session["search_results"] = results
         trace.step(
-            "search_listings (via MCP)",
+            f"search_listings ({route})",
             inputs=parsed,
             returned=results,
             note=f"{len(results)} match(es)",

@@ -63,7 +63,7 @@ FitFindr helps users find secondhand clothing listings based on a description, s
 ### `search_listings`
 
 - **What it does:** Searches the clothing listings for items matching the user's description, requested size, and maximum price.
-- **Inputs:** `description` (str), `size` (str), `max_price` (float) size: requested size string; matching is case-insensitive and supports combined sizes such as S/M.
+- **Inputs:** `description` (str), `size` (str, optional), `max_price` (float, optional, in whole dollars) size: requested size string; matching is case-insensitive and supports combined sizes such as S/M.
 - **Returns:** A list of matching clothing listings, including each listing's title, description, category, style tags, size, price, colors, brand, and platform.
 - **When it has nothing:** Returns an empty list when no listings match the description, size, and maximum price.
 
@@ -312,19 +312,143 @@ that produced it:
 **Happy path**
 
 ```
+[1] parse_query
+      in:  rust corduroy wide-leg pants under $35
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 5 items: Corduroy Wide-Leg Pants — Rust, Wide-Leg Linen Trousers — Natural, Low-Rise Cargo Pants — Khaki … +2 more
+      →    5 match(es)
+[3] select_item
+      out: Corduroy Wide-Leg Pants — Rust ($32.0, depop)
+[4] suggest_outfit
+      in:  Corduroy Wide-Leg Pants — Rust ($32.0, depop)
+      out: Here are two outfit suggestions using your new rust corduroy wide-leg pants and pieces from your wardrobe:  ##…
+      →    10 wardrobe item(s)
+[5] create_fit_card
+      in:  Corduroy Wide-Leg Pants — Rust ($32.0, depop)
+      out: Channeling major 70s autumn energy in these Rust Corduroy Wide-Leg Pants, which I just dropped on Depop for $3…
+
+  Found:    Corduroy Wide-Leg Pants — Rust — $32.0 on depop
+
+  Outfit:   Here are two outfit suggestions using your new rust corduroy wide-leg pants and pieces from your wardrobe:
+
+### Outfit 1: 70s Earth-Toned Casual
+* **Top:** White ribbed tank top
+* **Outerwear:** Vintage black denim jacket
+* **Accessories:** Brown leather belt, black crossbody bag
+* **Shoes:** Chunky white sneakers
+
+**Why it works:** 
+The fitted white ribbed tank top balances the voluminous, high-waisted silhouette of the wide-leg cords. Tucking in the tank and adding the brown leather belt highlights your waist while tying into the warm, earthy 70s aesthetic. Throwing on the vintage black denim jacket adds a classic layer that complements the vintage vibeof the corduroy, and the chunky white sneakers finish the look with a fresh, casual touch.
+
+### Outfit 2: Cozy & Contrasting Layers
+* **Top:** Oversized grey crewneck sweatshirt
+* **Accessories:** Brown leather belt, black crossbody bag
+* **Shoes:** Black combat boots
+
+**Why it works:**
+This outfit plays with proportions by pairing the slouchy, oversized grey crewneck with the textured rust cords. By doing a "half-tuck" with the crewneck into the front of the pants (secured with the brown leather belt), you keep some shape to your waist while maintaining a relaxed, cozy feel. Pairing the warm rust tones withthe cool grey creates a great color contrast, and the black combat boots add a slightly edgy anchor to the outfit.
+
+  Fit card: Channeling major 70s autumn energy in these Rust Corduroy Wide-Leg Pants, which I just dropped on Depop for $32. They are giving effortless earth-tone vintage, and I am so obsessed with how they look half-tucked into a cozy grey crewneck for that slouchy, textured contrast. Seriously the ultimate piece for building warm-toned transitional fits.
+
+2 model calls this session, 843 prompt + 390 output tokens
 
 ```
 
 **Empty search**
 
 ```
+python app.py ask 'a solid gold spacesuit under $1'
+
+[1] parse_query
+      in:  a solid gold spacesuit under $1
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+      →    0 match(es)
+[3] branch
+      →    search returned []: stopping before suggest_outfit
+
+  Nothing in the listings matched description 'a solid gold spacesuit', under $1.
+Things to change: try broader words — 'jacket' finds more than 'cropped corduroy jacket'; raise the price ceiling above $1.
+
+0 model calls this session
 
 ```
+
+**Empty Wardrobe**
+```
+
+(running with an empty wardrobe)
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 8 items: Graphic Tee — 2003 Tour Bootleg Style, Y2K Baby Tee — Butterfly Print, Vintage Graphic Hoodie — Faded Black … +5 more
+      →    8 match(es)
+[3] select_item
+      out: Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+[4] suggest_outfit
+      in:  Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+      out: Here are three practical ways to style the 2003 tour bootleg graphic tee:  **1. 90s Grunge (Textured Contrast)…
+      →    0 wardrobe item(s)
+[5] create_fit_card
+      in:  Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+      out: Nothing beats the perfectly worn-in feel of this 2003 Tour Bootleg Graphic Tee ($24.00, live on Depop now). It…
+
+  Found:    Graphic Tee — 2003 Tour Bootleg Style — $24.0 on depop
+
+  Outfit:   Here are three practical ways to style the 2003 tour bootleg graphic tee:
+
+**1. 90s Grunge (Textured Contrast)**
+* **The Vibe:** Effortless, edgy, and relaxed.
+* **How to style:** Pair the boxy black tee with relaxed-bottom pants in a contrasting texture or lighter wash (like distressed denim, corduroy, or plaid trousers). Layer with an open flannel shirt or a distressed knit cardigan. Finish with chunky boots or retro sneakers.
+
+**2. Elevated Streetwear (Clean & Proportionate)**
+* **The Vibe:** Modern, sharp, and intentional.
+* **How to style:** Balance the boxy fit of the tee by tucking it into straight-leg or wide-leg bottoms in a solid neutral (like black, charcoal, or olive). Add a structured outer layer like a leather jacket, a denim jacket, or a minimalist overcoat. Accessorize with a silver chain necklace, a canvas belt, and court sneakers or loafers.
+
+**3. Warm-Weather Casual (Simple & Easy)**
+* **The Vibe:** Laid-back, everyday comfort.
+* **How to style:** Wear the tee untucked with relaxed-fit shorts (denim, cargo, or nylon athletic styles). Keep it grounded with classic canvas low-top sneakers or slides. Add sunglasses or a baseball cap to complete the casual look.
+
+  Fit card: Nothing beats the perfectly worn-in feel of this 2003 Tour Bootleg Graphic Tee ($24.00, live on Depop now). It’s got that boxy, effortless grunge vibe that makes throwing together an outfit way too easy. Pair it with distressed denim and an open flannel for the ultimate textured contrast, or keep it clean for the streets.
+
+2 model calls this session, 568 prompt + 369 output tokens
+```
+
+**Model Unavailable**
+
+```
+[1] parse_query
+      in:  rust corduroy wide-leg pants under $35
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 5 items: Corduroy Wide-Leg Pants — Rust, Wide-Leg Linen Trousers — Natural, Low-Rise Cargo Pants — Khaki … +2 more
+      →    5 match(es)
+[3] select_item
+      out: Corduroy Wide-Leg Pants — Rust ($32.0, depop)
+[4] model unavailable
+      →    stopping, search results kept
+
+  The model couldn't be reached, so the outfit and caption steps didn't run. The search worked — 5 listing(s) were found. Check GEMINI_API_KEY in your .env, then run the same query again.
+What the service said: The model rejected your API key. Check GEMINI_API_KEY in your .env file, or create a fresh key at aistudio.google.com.
+
+1 model calls this session
+```
+
 
 **On the MCP move:** <!-- what changed in your code, and whether anything
 behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
 full. -->
+
+I registered `search_listings` in `mcp_server.py` and connected the agent's `_search()` function to call it through `mcp_client.call_tool()`. The MCP client confirmed that the server exposes `search_listings`. The agent's search trace showed the results, and the query continued through outfit suggestion and fit-card generation. Nothing behaved differently afterwards: the MCP call returned exactly the same list of listing dicts as the direct call (5 identical results for "rust corduroy wide-leg pants" under $35), and an impossible query still came back as an empty list.
+
 
 
 
