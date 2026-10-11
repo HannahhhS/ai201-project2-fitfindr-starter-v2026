@@ -230,6 +230,12 @@ Channeling peak early 2000s energy in this Y2K Baby Tee — Butterfly Print, esp
 - **What came back:** The generated fit cards were naturally longer than the original 20–200 character limit while still producing useful 2–4 sentence captions with the item, outfit details, and overall vibe.
 - **What I changed:** I changed my acceptance criterion to focus on the qualities that made the fit card useful: a 2–4 sentence caption of at least 100 characters that includes the new item's name, at least one outfit piece, and the overall style or vibe.
 
+**Moment 3**
+
+- **What I asked for:** I asked AI for a minimal, prompt-only change to `create_fit_card` that would push the model toward a descriptive item name without requiring the exact title.
+- **What came back:** It proposed replacing "Mention the item's name" with an instruction to keep the item type plus at least one identifying detail from the title. It suggested a made-up example ("striped wool sailor sweater") rather than my graphic tee example, because the graphic tee is the item my criterion 4 test runs on, and using it would hand the model the answer.
+- **What I changed:** I reviewed the wording, approved it, and re-ran the full eval to measure it.
+
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
@@ -478,7 +484,7 @@ behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
 full. -->
 
-I registered `search_listings` in `mcp_server.py` and connected the agent's `_search()` function to call it through `mcp_client.call_tool()`. The MCP client confirmed that the server exposes `search_listings`. The agent's search trace showed the results, and the query continued through outfit suggestion and fit-card generation. Nothing behaved differently afterwards: the MCP call returned exactly the same list of listing dicts as the direct call (5 identical results for "rust corduroy wide-leg pants" under $35), and an impossible query still came back as an empty list.
+I registered `search_listings` in `mcp_server.py` and connected the agent's `_search()` function to call it through `mcp_client.call_tool()`. The MCP client confirmed that the server exposes `search_listings`. The agent's search trace showed the results, and the query continued through outfit suggestion and fit-card generation. Nothing behaved differently afterwards: the MCP call returned exactly the same list of listing dicts as the direct call (5 identical results for "rust corduroy wide-leg pants" under $35), and an impossible query still came back as an empty list. In both eval runs, all 50 searches show `search_listings (via MCP)` in the trace, and none fell back to the direct call (`_search` labels the trace "direct call, MCP failed" when that happens).
 
 
 
@@ -537,6 +543,11 @@ In the after-run, every graphic tee card kept an identifying detail from the tit
 <!-- For each criterion still missed: what you'd do, and why you stopped where
      you did. "I ran out of time" is fine if it's true. Pretending nothing is
      left is not. -->
+
+No criterion was missed in either run, so there's no miss left to fix. These are the weak spots I know about:
+
+- **Criterion 5 tests too little.** It only checks that `suggest_outfit` returns advice instead of crashing, so it could only fail on an error. I'd tighten it to check that empty-wardrobe advice never mentions pieces the user doesn't own. I didn't, because changing a criterion I met wouldn't count as a revision, and the milestone asked for one improvement.
+- **Each scenario uses a single query.** Every try repeats the same query, so the eval doesn't show how the agent handles other phrasings or items. I'd add more scenarios to `scenarios.py` next.
 
 
 
