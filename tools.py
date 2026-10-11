@@ -274,7 +274,10 @@ OUTFIT:
 {outfit}
 
 Write 2–4 sentences that sound like a real social-media fit caption, not a
-product description. Mention the item's name, price, and platform once each.
+product description. Mention the item's price and platform once each. Refer to
+the item by a descriptive name: keep its type plus at least one identifying
+detail from the title (for example, "striped wool sailor sweater" rather than
+just "sweater"). You don't need to repeat the exact title word for word.
 Describe the overall vibe and connect the item to the suggested outfit.
 Keep it concise and natural.
 """

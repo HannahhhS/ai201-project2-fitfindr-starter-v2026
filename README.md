@@ -494,19 +494,36 @@ I registered `search_listings` in `mcp_server.py` and connected the agent's `_se
 
 **What I changed:**
 
+I made one prompt-only change in `tools.py::create_fit_card`. The old prompt said "Mention the item's name, price, and platform once each." The new prompt keeps price and platform once each, and replaces the vague "item's name" with a specific instruction: refer to the item by a descriptive name that keeps its type plus at least one identifying detail from the title, without repeating the exact title word for word. I used a made-up example ("striped wool sailor sweater" rather than just "sweater") instead of an item from the listings, so the prompt doesn't hand the model the answer for the item my criterion 4 test runs on. No other code, criteria, or prompt lines changed.
+
 **Which failure it was meant to fix:**
+
+No criterion was missed in the before-run, so this isn't fixing a miss. It targets the pattern from my criterion 4 diagnosis: the prompt asked the model to "mention the item's name" without asking it to keep the descriptive part, so it sometimes cut the name down to just the item type. Criterion 4's Try 1 said "boxy Graphic Tee" instead of something like "2003 Tour Bootleg Style graphic tee," and empty-wardrobe Try 2 said "this Denim Jacket." Criterion 4 was already 5/5, so success here means those generic names stop appearing in the after-run while every criterion stays met.
 
 ### Run Log — After
 
+Run: `python run_eval.py --label after` → `results/run_2026-10-10_2235_after.md` (5 tries per scenario, caching off, temperature 0.9).
+
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. matching query completes | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. impossible query stops early | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. selected item matches outfit input | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. fit card meets caption requirements | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. empty wardrobe | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
 **Did it help, and how do I know:**
+
+Yes, for the pattern it targeted, though the criterion scores can't show it because every criterion was already 5/5 and stayed 5/5. To measure the change, I compared how the fit cards named the item across all 20 fit cards in each run (the matching-query, selected-item, fit-card, and empty-wardrobe scenarios):
+
+| | Before | After |
+|---|---|---|
+| Fit cards that cut the name down to just the item type ("boxy Graphic Tee", "this Denim Jacket") | 2 of 20 | 0 of 20 |
+| Denim jacket cards whose name for the item kept both "light wash" and "cropped" | 2 of 5 | 5 of 5 |
+
+In the after-run, every graphic tee card kept an identifying detail from the title ("2003 tour bootleg tee", "2003 tour graphic tee", "faded tour bootleg graphic tee"), and every denim card said "light wash cropped denim jacket." None of the 20 used the exact title, which is fine because my criterion doesn't require it. The other criteria didn't get worse: the search, branch, session handoff, and empty-wardrobe fallback behaved the same as before.
+
+
 
 <!-- If it made things worse, say that. Honestly reported, that earns full
      credit and is more interesting than one that worked. -->
