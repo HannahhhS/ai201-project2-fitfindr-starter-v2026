@@ -248,19 +248,45 @@ Channeling peak early 2000s energy in this Y2K Baby Tee — Butterfly Print, esp
      `python run_eval.py --label before` runs everything and writes the table
      into results/. Paste it here and fill in the verdicts. -->
 
+
+
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+Run: `python run_eval.py --label before` → `results/run_2026-10-10_1355_before.md` (5 tries per scenario, caching off, temperature 0.9).
+
+| Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
+|---|---|---|---|---|---|---|---|
+| 1. matching query completes | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. impossible query stops early | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. selected item matches outfit input | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. fit card meets caption requirements | 4 of 5 | FAIL | PASS | PASS | PASS | PASS | MET (4/5) |
+| 5. empty wardrobe | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
 **Real output from one try**, pasted as text, naming the file and function
 that produced it:
 
-```
+Criterion 4, Try 1 — query `vintage graphic tee under $30`, example wardrobe. The fit card comes from `tools.py::create_fit_card`, called by `agent.py::run_agent`; the run was driven by `run_eval.py::main`. This is the one try marked FAIL: the caption shortens the item name to "boxy Graphic Tee" and drops "2003 Tour Bootleg Style", so it doesn't include the new item's name.
 
+```
+[1] parse_query
+      in:  vintage graphic tee under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 8 items: Graphic Tee — 2003 Tour Bootleg Style, Y2K Baby Tee — Butterfly Print, Vintage Graphic Hoodie — Faded Black … +5 more
+      →    8 match(es)
+[3] select_item
+      out: Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+[4] suggest_outfit
+      in:  Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+      out: Here are two outfit suggestions using your new graphic tee and pieces from your wardrobe:  ### Outfit 1: 90s G…
+      →    10 wardrobe item(s)
+[5] create_fit_card
+      in:  Graphic Tee — 2003 Tour Bootleg Style ($24.0, depop)
+      out: Channeling peak 90s grunge with this boxy Graphic Tee—score it on Depop for just $24.00! Throw on some baggy d…
+
+Fit card:
+Channeling peak 90s grunge with this boxy Graphic Tee—score it on Depop for just $24.00! Throw on some baggy denim and combat boots for an effortlessly edgy streetwear fit, or dress it down with wide-leg trousers for that perfect high-low contrast.
 ```
 
 ---
